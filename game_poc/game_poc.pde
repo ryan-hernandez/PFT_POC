@@ -1,6 +1,8 @@
 int [][] gameboard;
 int playerX, playerY;
 int hoverX, hoverY;
+Stack<Cell> path;
+Stack<Cell> clearPath;
 
 void setup() {
   size(500, 500);
@@ -41,6 +43,27 @@ void setup() {
     setWall(x, y);
     drawGrid();
   }
+  
+  path = new Stack<Cell>();
+  clearPath = new Stack<Cell>();
+}
+
+void drawPath(Cell cell) {
+  if ((cell.x == playerX && cell.y == playerY) || (cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
+    return;
+  }
+  
+  fill(0, 0, 255);
+  stroke(0);
+  square((cell.x * 10), (cell.y * 10), 10);
+}
+
+void clearPath(Cell cell) {
+  if (!(cell.x == playerX && cell.y == playerY) && !(cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
+    fill(255);
+    stroke(0);
+    square(cell.x * 10, cell.y * 10, 10);
+  }
 }
 
 void draw() {
@@ -65,12 +88,28 @@ void draw() {
     }
   }
   
-  // Colors the cell yellow when the user hovers the 
-  // cursor over it.
+  // Colors the cell yellow when the user hovers the cursor over it.
   clearHover(hoverX, hoverY);
   hoverX = ((int)mouseX / 10) * 10;
   hoverY = ((int)mouseY / 10) * 10;
   hover(hoverX, hoverY);
+  
+  // Clear the previous path from the board
+  while (clearPath != null && !clearPath.empty()) {
+    Cell cell = clearPath.pop();
+    clearPath(cell);
+  }
+  
+  // Perform a* search for path from player to cursor
+  Cell source = new Cell(playerX, playerY);
+  Cell dest = new Cell(hoverX / 10, hoverY / 10);
+  path = astar(source, dest, gameboard);
+  
+  while (path != null && !path.empty()) {
+    Cell cell = path.pop();
+    clearPath.push(cell);
+    drawPath(cell);
+  }
 }
 
 void keyPressed() {
@@ -120,6 +159,11 @@ void mousePressed() {
   // Updates location of player based on user's click.
   if (gameboard[(int)mouseX / 10][(int)mouseY / 10] != 999) {
     updatePlayerPos((int)mouseX / 10, (int)mouseY / 10);
+  }
+  
+  while (clearPath != null && !clearPath.empty()) {
+    Cell cell = clearPath.pop();
+    clearPath(cell);
   }
 }
 
