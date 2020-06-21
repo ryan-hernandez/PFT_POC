@@ -76,24 +76,21 @@ void draw() {
   hoverY = ((int)mouseY / 10) * 10;
   hover(hoverX, hoverY);
   
-  // Generate new path (every 5 ms to ease computational load).
-  if (millis() % 5 == 0) {
-    // Clear the previous path from the board
-    while (clearPath != null && !clearPath.empty()) {
-      Cell cell = clearPath.pop();
-      clearPath(cell);
-    }
-    
-    // Perform A* search for path from player to cursor.
-    Cell source = new Cell(playerX, playerY);
-    Cell dest = new Cell(hoverX / 10, hoverY / 10);
-    path = astar(source, dest, gameboard);
-    
-    while (path != null && !path.empty()) {
-      Cell cell = path.pop();
-      clearPath.push(cell);
-      drawPath(cell);
-    }
+  // Clear the previous path from the board
+  while (clearPath != null && !clearPath.empty()) {
+    Cell cell = clearPath.pop();
+    clearPath(cell);
+  }
+  
+  // Perform A* search for path from player to cursor.
+  Cell source = new Cell(playerX, playerY);
+  Cell dest = new Cell(hoverX / 10, hoverY / 10);
+  path = astar(source, dest, gameboard);
+  
+  while (path != null && !path.empty()) {
+    Cell cell = path.pop();
+    clearPath.push(cell);
+    drawPath(cell);
   }
 }
 
