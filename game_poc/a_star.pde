@@ -35,7 +35,7 @@ public class CellComparator implements Comparator<Cell> {
 
 // Function to check if a cell row/col is within range
 boolean isValid(int x, int y) {
-  return (x >= 0) && (x < 50) && (y >= 0) && (y < 50);
+  return (x >= 0) && (x < board_size) && (y >= 0) && (y < board_size);
 }
 
 // Function to check if a cell is occupied by wall
@@ -53,7 +53,7 @@ double calculateH(Cell source, Cell dest) {
 
 Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
   PriorityQueue<Cell> openList = new PriorityQueue<Cell>(1, new CellComparator());
-  boolean closedList[][] = new boolean[50][50];
+  boolean closedList[][] = new boolean[board_size][board_size];
   
   if (!isValid(source.x, source.y) || !isValid(dest.x, dest.y)) {
     println("Source or target is invalid.");
@@ -72,10 +72,10 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
   
   // Create and initialize an array to hold 
   // heuristic calculations for each cell,
-  Cell[][] cellDetails = new Cell[50][50];
+  Cell[][] cellDetails = new Cell[board_size][board_size];
   
-  for (int i = 0; i < 50; i++) {
-     for (int j = 0; j < 50; j++) {
+  for (int i = 0; i < board_size; i++) {
+     for (int j = 0; j < board_size; j++) {
        cellDetails[i][j] = new Cell(i, j);
        cellDetails[i][j].f = Double.MAX_VALUE;
        cellDetails[i][j].g = Double.MAX_VALUE;

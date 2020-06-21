@@ -1,28 +1,32 @@
-int [][] gameboard;
-int playerX, playerY;
-int hoverX, hoverY;
-Stack<Cell> path;
-Stack<Cell> clearPath;
+private int [][] gameboard;
+private int playerX, playerY;
+private int hoverX, hoverY;
+private final int board_size = 75;
+private Stack<Cell> path;
+private Stack<Cell> clearPath;
 
 void setup() {
-  size(500, 500);
+  // Size can't be set using variale so if 
+  // board_size is changed, the size must be manually
+  // changed (value is board_size * 10).
+  size(750, 750);
   background(255);
-  gameboard  = new int[50][50];
+  gameboard  = new int[board_size][board_size];
   
   // Create the 'player' and spawn them in a random location.
-  playerX = (int)random(0, 50);
-  playerY = (int)random(0, 50);
+  playerX = (int)random(0, board_size);
+  playerY = (int)random(0, board_size);
  
   gameboard[playerX][playerY] = 1;
   
   // Create  10 'enemies' in random locations.
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 100; i++) {
    int x = 0;
    int y = 0;
    
    do {
-     x = (int)random(0, 50);
-     y = (int)random(0, 50);
+     x = (int)random(0, board_size);
+     y = (int)random(0, board_size);
    }
    while (gameboard[x][y] == 1 || gameboard[x][y] == 2);
 
@@ -30,13 +34,13 @@ void setup() {
   }
   
   // Create 10 'walls' in random locations
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 100; i++) {
     int x = 0;
     int y = 0;
     
     do {
-      x = (int)random(0, 50);
-      y = (int) random(0, 50);
+      x = (int)random(0, board_size);
+      y = (int) random(0, board_size);
     }
     while (gameboard[x][y] == 1 || gameboard[x][y] == 2 || gameboard[x][y] == 999);
     
@@ -54,8 +58,8 @@ void draw() {
   // 1 - Player (Green)
   // 2 - Enemy (Red)
   // 999 - Wall (Black)
-  for (int i = 0; i < 50; i++) {
-    for (int j = 0; j < 50; j++) {
+  for (int i = 0; i < board_size; i++) {
+    for (int j = 0; j < board_size; j++) {
       if (gameboard[i][j] == 1) {
         drawPlayer(i, j);
       }
@@ -108,7 +112,7 @@ void keyPressed() {
     }
     
     if (keyCode == DOWN) {
-      if (playerY < 49 && gameboard[playerX][playerY + 1] != 2 && gameboard[playerX][playerY + 1] != 999) {
+      if (playerY < board_size - 1 && gameboard[playerX][playerY + 1] != 2 && gameboard[playerX][playerY + 1] != 999) {
         clearCell(playerX, playerY);
         
         playerY++;
@@ -126,7 +130,7 @@ void keyPressed() {
     }
       
     if (keyCode == RIGHT) {
-      if (playerX < 49 && gameboard[playerX + 1][playerY] != 2 && gameboard[playerX + 1][playerY] != 999) {
+      if (playerX < board_size - 1 && gameboard[playerX + 1][playerY] != 2 && gameboard[playerX + 1][playerY] != 999) {
         clearCell(playerX, playerY);
         
         playerX++;
@@ -204,7 +208,7 @@ void setWall(int x, int y) {
   // (unless it runs into the edge of the map/player/enemy/another wall).
   if (orientation == 0) {
     for (int i = 0; i < 5; i++) {
-      if ((x + i) > 49 ||
+      if ((x + i) > board_size - 1 ||
           gameboard[x + i][y] == 1 || 
           gameboard[x + i][y] == 2 || 
           gameboard[x + i][y] == 999) {
@@ -218,7 +222,7 @@ void setWall(int x, int y) {
   // (unless it runs into the edge of the map/player/enemy/another wall).
   else {
     for (int i = 0; i < 5; i++) {
-      if ((y + i) > 49 ||
+      if ((y + i) > board_size - 1 ||
           gameboard[x][y + i] == 1 ||
           gameboard[x][y + i] == 2 ||
           gameboard[x][y + i] == 999) {
@@ -292,10 +296,10 @@ void clearHover(int x, int y) {
  */
 void drawGrid() {
   stroke(2);
-  for (int i = 0; i < 501; i++) {
+  for (int i = 0; i < (board_size * 10) + 1; i++) {
     if (i % 10 == 0) {
-      line(i, 0, i, 500);
-      line(0, i, 500, i);
+      line(i, 0, i, (board_size * 10));
+      line(0, i, (board_size * 10), i);
     }
   }
 }
