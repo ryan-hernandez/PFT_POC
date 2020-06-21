@@ -1,6 +1,11 @@
 import java.util.*;
 
-class Cell {
+/*
+ * Class to hold a cell's coordinates as 
+ * well as its parents coordinates for use
+ * in A* search.
+ */
+public class Cell {
  int x, y, parent_x, parent_y;
  double f, g, h;
  
@@ -10,10 +15,27 @@ class Cell {
  }
 }
 
+/*
+ * Comparator class to compare f calculations used
+ * in A* search.
+ */
+public class CellComparator implements Comparator<Cell> {
+  
+ @Override
+ public int compare(Cell c1, Cell c2) {
+   if (c1.f < c2.f) {
+     return -1;
+   }
+   else if (c1.f > c2.f) {
+     return 1;
+   }
+   return 0;
+ }
+}
+
 // Function to check if a cell row/col is within range
 boolean isValid(int x, int y) {
-  return (x >= 0) && (x < 50) && 
-         (y >= 0) && (y < 50);
+  return (x >= 0) && (x < 50) && (y >= 0) && (y < 50);
 }
 
 // Function to check if a cell is occupied by wall
@@ -30,7 +52,7 @@ double calculateH(Cell source, Cell dest) {
 }
 
 Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
-  Stack<Cell> openList = new Stack<Cell>();
+  PriorityQueue<Cell> openList = new PriorityQueue<Cell>(1, new CellComparator());
   boolean closedList[][] = new boolean[50][50];
   
   if (!isValid(source.x, source.y) || !isValid(dest.x, dest.y)) {
@@ -48,6 +70,8 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
      return null;
   }
   
+  // Create and initialize an array to hold 
+  // heuristic calculations for each cell,
   Cell[][] cellDetails = new Cell[50][50];
   
   for (int i = 0; i < 50; i++) {
@@ -61,17 +85,25 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
      }
   }
   
+  // Initialize starting cell
   int x = source.x, y = source.y;
+  source.f = 0.0;
+  source.g = 0.0;
+  source.h = 0.0;
+  
   cellDetails[x][y].f = 0.0;
   cellDetails[x][y].g = 0.0;
   cellDetails[x][y].h = 0.0;
   cellDetails[x][y].parent_x = x;
   cellDetails[x][y].parent_y = y;
   
-  openList.push(source);
+  openList.add(source);
   
-  while (!openList.empty()) {
-    Cell cell = openList.pop();
+  while (!openList.isEmpty()) {
+    // Takes the cell with the lowest f
+    // score in the PriorityQueue 'openList'
+    // for evaluation with A*
+    Cell cell = openList.poll();
     x = cell.x;
     y = cell.y;
     closedList[x][y] = true;
@@ -86,7 +118,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(north, dest) == true) {
         cellDetails[north.x][north.y].parent_x = x;
         cellDetails[north.x][north.y].parent_y = y;
-        println("The destination cell was found north of cell[" + x + "][" + y + "] at cell[" + north.x + "][" + north.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[north.x][north.y] == false &&
@@ -95,9 +127,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(north, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[north.x][north.y].f == Double.MAX_VALUE ||
-            cellDetails[north.x][north.y].f > fNew) {
-          openList.push(north);
+        if (cellDetails[north.x][north.y].f > fNew) {
+          north.f = fNew;
+          openList.add(north);
           
           cellDetails[north.x][north.y].f = fNew;
           cellDetails[north.x][north.y].g = gNew;
@@ -116,7 +148,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(south, dest) == true) {
         cellDetails[south.x][south.y].parent_x = x;
         cellDetails[south.x][south.y].parent_y = y;
-        println("The destination cell was found south of cell[" + x + "][" + y + "] at cell[" + south.x + "][" + south.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[south.x][south.y] == false &&
@@ -125,9 +157,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(south, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[south.x][south.y].f == Double.MAX_VALUE ||
-            cellDetails[south.x][south.y].f > fNew) {
-          openList.push(south);
+        if (cellDetails[south.x][south.y].f > fNew) {
+          south.f = fNew;
+          openList.add(south);
           
           cellDetails[south.x][south.y].f = fNew;
           cellDetails[south.x][south.y].g = gNew;
@@ -146,7 +178,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(east, dest) == true) {
         cellDetails[east.x][east.y].parent_x = x;
         cellDetails[east.x][east.y].parent_y = y;
-        println("The destination cell was found east of cell[" + x + "][" + y + "] at cell[" + east.x + "][" + east.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[east.x][east.y] == false &&
@@ -155,9 +187,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(east, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[east.x][east.y].f == Double.MAX_VALUE ||
-            cellDetails[east.x][east.y].f > fNew) {
-          openList.push(east);
+        if (cellDetails[east.x][east.y].f > fNew) {
+          east.f = fNew;
+          openList.add(east);
           
           cellDetails[east.x][east.y].f = fNew;
           cellDetails[east.x][east.y].g = gNew;
@@ -176,7 +208,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(west, dest) == true) {
         cellDetails[west.x][west.y].parent_x = x;
         cellDetails[west.x][west.y].parent_y = y;
-        println("The destination cell was found west of cell[" + x + "][" + y + "] at cell[" + west.x + "][" + west.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[west.x][west.y] == false &&
@@ -185,9 +217,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(west, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[west.x][west.y].f == Double.MAX_VALUE ||
-            cellDetails[west.x][west.y].f > fNew) {
-          openList.push(west);
+        if (cellDetails[west.x][west.y].f > fNew) {
+          west.f = fNew;
+          openList.add(west);
           
           cellDetails[west.x][west.y].f = fNew;
           cellDetails[west.x][west.y].g = gNew;
@@ -206,7 +238,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(northEast, dest) == true) {
         cellDetails[northEast.x][northEast.y].parent_x = x;
         cellDetails[northEast.x][northEast.y].parent_y = y;
-        println("The destination cell was found west of cell[" + x + "][" + y + "] at cell[" + northEast.x + "][" + northEast.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[northEast.x][northEast.y] == false &&
@@ -215,9 +247,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(northEast, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[northEast.x][northEast.y].f == Double.MAX_VALUE ||
-            cellDetails[northEast.x][northEast.y].f > fNew) {
-          openList.push(northEast);
+        if (cellDetails[northEast.x][northEast.y].f > fNew) {
+          northEast.f = fNew;
+          openList.add(northEast);
           
           cellDetails[northEast.x][northEast.y].f = fNew;
           cellDetails[northEast.x][northEast.y].g = gNew;
@@ -236,7 +268,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(southEast, dest) == true) {
         cellDetails[southEast.x][southEast.y].parent_x = x;
         cellDetails[southEast.x][southEast.y].parent_y = y;
-        println("The destination cell was found west of cell[" + x + "][" + y + "] at cell[" + southEast.x + "][" + southEast.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[southEast.x][southEast.y] == false &&
@@ -245,9 +277,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(southEast, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[southEast.x][southEast.y].f == Double.MAX_VALUE ||
-            cellDetails[southEast.x][southEast.y].f > fNew) {
-          openList.push(southEast);
+        if (cellDetails[southEast.x][southEast.y].f > fNew) {
+          southEast.f = fNew;
+          openList.add(southEast);
           
           cellDetails[southEast.x][southEast.y].f = fNew;
           cellDetails[southEast.x][southEast.y].g = gNew;
@@ -266,7 +298,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(southWest, dest) == true) {
         cellDetails[southWest.x][southWest.y].parent_x = x;
         cellDetails[southWest.x][southWest.y].parent_y = y;
-        println("The destination cell was found west of cell[" + x + "][" + y + "] at cell[" + southWest.x + "][" + southWest.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[southWest.x][southWest.y] == false &&
@@ -275,9 +307,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(southWest, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[southWest.x][southWest.y].f == Double.MAX_VALUE ||
-            cellDetails[southWest.x][southWest.y].f > fNew) {
-          openList.push(southWest);
+        if (cellDetails[southWest.x][southWest.y].f > fNew) {
+          southWest.f = fNew;
+          openList.add(southWest);
           
           cellDetails[southWest.x][southWest.y].f = fNew;
           cellDetails[southWest.x][southWest.y].g = gNew;
@@ -296,7 +328,7 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       if (isDestination(northWest, dest) == true) {
         cellDetails[northWest.x][northWest.y].parent_x = x;
         cellDetails[northWest.x][northWest.y].parent_y = y;
-        println("The destination cell was found west of cell[" + x + "][" + y + "] at cell[" + northWest.x + "][" + northWest.y + "].");
+        
         return tracePath(cellDetails, dest);
       }
       else if (closedList[northWest.x][northWest.y] == false &&
@@ -305,9 +337,9 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
         hNew = calculateH(northWest, dest);
         fNew = gNew + hNew;
         
-        if (cellDetails[northWest.x][northWest.y].f == Double.MAX_VALUE ||
-            cellDetails[northWest.x][northWest.y].f > fNew) {
-          openList.push(northWest);
+        if (cellDetails[northWest.x][northWest.y].f > fNew) {
+          northWest.f = fNew;
+          openList.add(northWest);
           
           cellDetails[northWest.x][northWest.y].f = fNew;
           cellDetails[northWest.x][northWest.y].g = gNew;
@@ -324,12 +356,18 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
   return null;
 }
 
+/*
+ * Function to return the path from the source cell to the
+ * destination cell.
+ */
 Stack<Cell> tracePath(Cell[][] cellDetails, Cell dest) {
   Stack<Cell> path = new Stack<Cell>();
   
   int x = dest.x;
   int y = dest.y;
   
+  // Add each cell to the stack, starting from the destination, until we reach
+  // the starting cell.
   while (!(cellDetails[x][y].parent_x == x && cellDetails[x][y].parent_y == y )) { 
     path.push(new Cell(x, y));
     int parent_x = cellDetails[x][y].parent_x; 
@@ -338,6 +376,7 @@ Stack<Cell> tracePath(Cell[][] cellDetails, Cell dest) {
     y = parent_y;
   } 
   
+  // Add the starting cell to the stack
   path.push(new Cell(x, y));
   
   return path;

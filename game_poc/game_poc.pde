@@ -48,24 +48,6 @@ void setup() {
   clearPath = new Stack<Cell>();
 }
 
-void drawPath(Cell cell) {
-  if ((cell.x == playerX && cell.y == playerY) || (cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
-    return;
-  }
-  
-  fill(0, 0, 255);
-  stroke(0);
-  square((cell.x * 10), (cell.y * 10), 10);
-}
-
-void clearPath(Cell cell) {
-  if (!(cell.x == playerX && cell.y == playerY) && !(cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
-    fill(255);
-    stroke(0);
-    square(cell.x * 10, cell.y * 10, 10);
-  }
-}
-
 void draw() {
   // Iterates over gameboard and colors the cells
   // based on their values:
@@ -94,21 +76,24 @@ void draw() {
   hoverY = ((int)mouseY / 10) * 10;
   hover(hoverX, hoverY);
   
-  // Clear the previous path from the board
-  while (clearPath != null && !clearPath.empty()) {
-    Cell cell = clearPath.pop();
-    clearPath(cell);
-  }
-  
-  // Perform a* search for path from player to cursor
-  Cell source = new Cell(playerX, playerY);
-  Cell dest = new Cell(hoverX / 10, hoverY / 10);
-  path = astar(source, dest, gameboard);
-  
-  while (path != null && !path.empty()) {
-    Cell cell = path.pop();
-    clearPath.push(cell);
-    drawPath(cell);
+  // Generate new path (every 5 ms to ease computational load).
+  if (millis() % 5 == 0) {
+    // Clear the previous path from the board
+    while (clearPath != null && !clearPath.empty()) {
+      Cell cell = clearPath.pop();
+      clearPath(cell);
+    }
+    
+    // Perform A* search for path from player to cursor.
+    Cell source = new Cell(playerX, playerY);
+    Cell dest = new Cell(hoverX / 10, hoverY / 10);
+    path = astar(source, dest, gameboard);
+    
+    while (path != null && !path.empty()) {
+      Cell cell = path.pop();
+      clearPath.push(cell);
+      drawPath(cell);
+    }
   }
 }
 
@@ -195,6 +180,21 @@ void drawWall(int x, int y) {
 }
 
 /*
+ * Draws one cell of the path from player to the location
+ * of their hovering cursor.
+ */
+void drawPath(Cell cell) {
+  // Do not draw if the cell is the player cell or the destination cell
+  if ((cell.x == playerX && cell.y == playerY) || (cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
+    return;
+  }
+  
+  fill(0, 0, 255);
+  stroke(0);
+  square((cell.x * 10), (cell.y * 10), 10);
+}
+
+/*
  * Sets the gameboard locations of the randomly generated walls
  */
 void setWall(int x, int y) {
@@ -238,9 +238,19 @@ void setWall(int x, int y) {
  * (unless a wall is present in the cell).
  */
 void hover(int x, int y) {
-  if (gameboard[x / 10][y / 10] != 999) { 
-    fill(255, 255, 0);
-    stroke(0);
+  if (gameboard[x / 10][y / 10] != 999) {  
+    if (gameboard[x / 10][y / 10] == 1) {
+      fill(0, 255, 0);
+      stroke(255,255, 0);
+    }
+    else if (gameboard[x / 10][y / 10] == 2) {
+      fill(255, 0, 0);
+      stroke(255, 255, 0);
+    }
+    else {
+      fill(255, 255, 0);
+      stroke(0);
+    }
     square(x, y, 10);
   }
 }
@@ -255,6 +265,18 @@ void clearCell(int x, int y) {
   stroke(0);
   square(x * 10, y * 10, 10);
   
+}
+
+/*
+ * Resets the cell back to its appearance before a 
+ * path was drawn on it.
+ */
+void clearPath(Cell cell) {
+  if (!(cell.x == playerX && cell.y == playerY) && !(cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
+    fill(255);
+    stroke(0);
+    square(cell.x * 10, cell.y * 10, 10);
+  }
 }
 
 /* 
