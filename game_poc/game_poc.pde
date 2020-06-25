@@ -1,26 +1,34 @@
 private int [][] gameboard;
 private int playerX, playerY;
+private int updatedX, updatedY;
 private int hoverX, hoverY;
 private final int board_size = 75;
 private Stack<Cell> path;
-private Stack<Cell> clearPath;
+private int playerMovementCap = 7;
+private boolean castingSpell = false;
 
 void setup() {
   // Size can't be set using variale so if 
   // board_size is changed, the size must be manually
   // changed (value is board_size * 10).
-  size(750, 750);
+  size(750, 850);
   background(255);
-  gameboard  = new int[board_size][board_size];
   
+  gameboard  = new int[board_size][board_size];
+  generateMap();
+  
+  path = new Stack<Cell>();
+}
+
+void generateMap() {
   // Create the 'player' and spawn them in a random location.
   playerX = (int)random(0, board_size);
   playerY = (int)random(0, board_size);
  
   gameboard[playerX][playerY] = 1;
   
-  // Create  10 'enemies' in random locations.
-  for (int i = 0; i < 100; i++) {
+  // Create  n 'enemies' in random locations.
+  for (int i = 0; i < board_size; i++) {
    int x = 0;
    int y = 0;
    
@@ -33,8 +41,8 @@ void setup() {
    gameboard[x][y] = 2;
   }
   
-  // Create 10 'walls' in random locations
-  for (int i = 0; i < 100; i++) {
+  // Create n 'walls' in random locations
+  for (int i = 0; i < board_size; i++) {
     int x = 0;
     int y = 0;
     
@@ -45,14 +53,11 @@ void setup() {
     while (gameboard[x][y] == 1 || gameboard[x][y] == 2 || gameboard[x][y] == 999);
     
     setWall(x, y);
-    drawGrid();
   }
-  
-  path = new Stack<Cell>();
-  clearPath = new Stack<Cell>();
 }
 
 void draw() {
+  drawGrid();
   // Iterates over gameboard and colors the cells
   // based on their values:
   // 1 - Player (Green)
@@ -60,7 +65,7 @@ void draw() {
   // 999 - Wall (Black)
   for (int i = 0; i < board_size; i++) {
     for (int j = 0; j < board_size; j++) {
-      if (gameboard[i][j] == 1) {
+      if (gameboard[i][j] == 1 && !castingSpell) {
         drawPlayer(i, j);
       }
       
@@ -75,27 +80,34 @@ void draw() {
   }
   
   // Colors the cell yellow when the user hovers the cursor over it.
-  clearHover(hoverX, hoverY);
   hoverX = ((int)mouseX / 10) * 10;
   hoverY = ((int)mouseY / 10) * 10;
   hover(hoverX, hoverY);
   
-  // Clear the previous path from the board
-  while (clearPath != null && !clearPath.empty()) {
-    Cell cell = clearPath.pop();
-    clearPath(cell);
+  if (!castingSpell) {
+    // Perform A* search for path from player to cursor.
+    Cell source = new Cell(playerX, playerY);
+    Cell dest = new Cell(hoverX / 10, hoverY / 10);
+    path = astar(source, dest, gameboard, true);
+    
+    int i = 0;
+    
+    while (path != null && !path.empty() && i < playerMovementCap) {
+      Cell cell = path.pop();
+      drawPath(cell);
+      if (path.size() != 1) {
+        updatedX = cell.x;
+        updatedY = cell.y;
+      }
+      
+      i++;
+    }
   }
-  
-  // Perform A* search for path from player to cursor.
-  Cell source = new Cell(playerX, playerY);
-  Cell dest = new Cell(hoverX / 10, hoverY / 10);
-  path = astar(source, dest, gameboard);
-  
-  while (path != null && !path.empty()) {
-    Cell cell = path.pop();
-    clearPath.push(cell);
-    drawPath(cell);
+  else {
+    coneOfFire();
   }
+  textAlign(CENTER);
+  text("Press Q to toggle spell cast", ((board_size * 10) / 2), (board_size * 10) + 50);
 }
 
 void keyPressed() {
@@ -104,52 +116,75 @@ void keyPressed() {
   if (key == CODED) {
     if (keyCode == UP) {
       if (playerY > 0 && gameboard[playerX][playerY - 1] != 2 && gameboard[playerX][playerY - 1] != 999) {
-        clearCell(playerX, playerY);
-        
-        playerY--;
-        drawPlayer(playerX, playerY);
+        updatePlayerPos(playerX, playerY, playerX, playerY - 1);
       }
     }
     
     if (keyCode == DOWN) {
       if (playerY < board_size - 1 && gameboard[playerX][playerY + 1] != 2 && gameboard[playerX][playerY + 1] != 999) {
-        clearCell(playerX, playerY);
-        
-        playerY++;
-        drawPlayer(playerX, playerY);
+        updatePlayerPos(playerX, playerY, playerX, playerY + 1);
       }
     }
       
     if (keyCode == LEFT) {
       if (playerX > 0 && gameboard[playerX - 1][playerY] != 2 && gameboard[playerX - 1][playerY] != 999) {
-        clearCell(playerX, playerY);
-        
-        playerX--;
-        drawPlayer(playerX, playerY);
+        updatePlayerPos(playerX, playerY, playerX - 1, playerY);
       }
     }
       
     if (keyCode == RIGHT) {
       if (playerX < board_size - 1 && gameboard[playerX + 1][playerY] != 2 && gameboard[playerX + 1][playerY] != 999) {
-        clearCell(playerX, playerY);
-        
-        playerX++;
-        drawPlayer(playerX, playerY);
+        updatePlayerPos(playerX, playerY, playerX + 1, playerY);
       }
     }
   }
-  println("Player X coord: " + playerX + "\nPlayer Y coord: " + playerY);
+  
+  if (key == 'q') {
+    castingSpell = !castingSpell;
+  }
+}
+
+void coneOfFire() {
+  drawCone();
+}
+
+void drawCone() {
+  // middle line
+  //line((playerX * 10) + 5, (playerY * 10) + 5, hoverX + 5, hoverY + 5);
+  int posX = (playerX * 10) + 5;
+  int posY = (playerY * 10) + 5;
+  float angle = (float)Math.atan2(mouseY-posY, mouseX-posX);
+
+  translate(posX, posY);
+  rotate(angle + radians(-90));
+
+  stroke(0);
+  fill(255, 185, 0);
+  beginShape();
+  vertex(0, 0);
+  vertex(20, 60);
+  curveVertex(15, 63);
+  curveVertex(10, 65);
+  curveVertex(5, 66);
+  curveVertex(0, 67);
+  curveVertex(-5, 66);
+  curveVertex(-10, 65);
+  curveVertex(-15, 63);
+  vertex(-20, 60);
+  vertex(0, 0);
+  endShape();
 }
 
 void mousePressed() {
-  // Updates location of player based on user's click.
-  if (gameboard[(int)mouseX / 10][(int)mouseY / 10] != 999) {
-    updatePlayerPos((int)mouseX / 10, (int)mouseY / 10);
+  // Updates location of player based on the path to the user's
+  // hovering cursor.
+  if (castingSpell) {
+    
   }
-  
-  while (clearPath != null && !clearPath.empty()) {
-    Cell cell = clearPath.pop();
-    clearPath(cell);
+  else if (isValidMovement(mouseX, mouseY) && 
+           gameboard[(int)mouseX / 10][(int)mouseY / 10] != 999 &&
+           !(hoverX / 10 == playerX && hoverY / 10 == playerY)) {
+    updatePlayerPos(playerX, playerY, updatedX, updatedY);
   }
 }
 
@@ -239,55 +274,22 @@ void setWall(int x, int y) {
  * (unless a wall is present in the cell).
  */
 void hover(int x, int y) {
-  if (gameboard[x / 10][y / 10] != 999) {  
-    if (gameboard[x / 10][y / 10] == 1) {
-      fill(0, 255, 0);
-      stroke(255,255, 0);
+  if (isValidMovement(mouseX, mouseY)) {
+    if (gameboard[x / 10][y / 10] != 999) {  
+      if (gameboard[x / 10][y / 10] == 1) {
+        fill(0, 255, 0);
+        stroke(255,255, 0);
+      }
+      else if (gameboard[x / 10][y / 10] == 2) {
+        fill(255, 0, 0);
+        stroke(255, 255, 0);
+      }
+      else {
+        fill(255, 255, 0);
+        stroke(0);
+      }
+      square(x, y, 10);
     }
-    else if (gameboard[x / 10][y / 10] == 2) {
-      fill(255, 0, 0);
-      stroke(255, 255, 0);
-    }
-    else {
-      fill(255, 255, 0);
-      stroke(0);
-    }
-    square(x, y, 10);
-  }
-}
-
-/*
- * Resets the gameboard value and 
- * fills the cell with a white square.
- */
-void clearCell(int x, int y) {
-  gameboard[x][y] = 0;
-  fill(255);
-  stroke(0);
-  square(x * 10, y * 10, 10);
-  
-}
-
-/*
- * Resets the cell back to its appearance before a 
- * path was drawn on it.
- */
-void clearPath(Cell cell) {
-  if (!(cell.x == playerX && cell.y == playerY) && !(cell.x == hoverX / 10 && cell.y == hoverY / 10)) {
-    fill(255);
-    stroke(0);
-    square(cell.x * 10, cell.y * 10, 10);
-  }
-}
-
-/* 
- * Visually resets the cell back to its white background
- */
-void clearHover(int x, int y) {
-  if (gameboard[x / 10][y / 10] != 999) {
-    fill(255);
-    stroke(0);
-    square(x, y, 10);
   }
 }
 
@@ -295,6 +297,7 @@ void clearHover(int x, int y) {
  * Draws the 50x50 grid
  */
 void drawGrid() {
+  background(255);
   stroke(2);
   for (int i = 0; i < (board_size * 10) + 1; i++) {
     if (i % 10 == 0) {
@@ -308,13 +311,16 @@ void drawGrid() {
  * Changes the cell of the player (green square) when 
  * the user clicks on a grid cell
  */
-void updatePlayerPos(int x, int y) {
+void updatePlayerPos(int oldX, int oldY, int x, int y) {
   // Clear the old location of the player
-  clearCell(playerX, playerY);
+  gameboard[oldX][oldY] = 0;
   
   // Update player location and draw
   playerX = x;
   playerY = y;
   gameboard[playerX][playerY] = 1;
-  drawPlayer(playerX, playerY);
+}
+
+boolean isValidMovement(int x, int y) {
+  return ((x >= 0) && (x < board_size * 10) && (y >= 0) && (y < board_size * 10));
 }

@@ -51,22 +51,19 @@ double calculateH(Cell source, Cell dest) {
  return dist(source.x, source.y, dest.x, dest.y); 
 }
 
-Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
+Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard, boolean allowDiag) {
   PriorityQueue<Cell> openList = new PriorityQueue<Cell>(1, new CellComparator());
   boolean closedList[][] = new boolean[board_size][board_size];
   
   if (!isValid(source.x, source.y) || !isValid(dest.x, dest.y)) {
-    println("Source or target is invalid.");
     return null;
   }
   
   if (isBlocked(gameboard, source) || isBlocked(gameboard, dest)) {
-    println("Source or target is blocked.");
     return null;
   }
   
   if (isDestination(source, dest)) {
-     println("Already at destination."); 
      return null;
   }
   
@@ -230,122 +227,124 @@ Stack<Cell> astar(Cell source, Cell dest, int[][] gameboard) {
       }
     }
     
-    // Check cell northeast of current cell
-    if (isValid(cell.x + 1, cell.y - 1) == true) {
-      
-      Cell northEast = new Cell(cell.x + 1, cell.y - 1);
-      
-      if (isDestination(northEast, dest) == true) {
-        cellDetails[northEast.x][northEast.y].parent_x = x;
-        cellDetails[northEast.x][northEast.y].parent_y = y;
+    if (allowDiag) {
+      // Check cell northeast of current cell
+      if (isValid(cell.x + 1, cell.y - 1) == true) {
         
-        return tracePath(cellDetails, dest);
-      }
-      else if (closedList[northEast.x][northEast.y] == false &&
-               isBlocked(gameboard, northEast) == false) {
-        gNew = cellDetails[x][y].g + 1.414;
-        hNew = calculateH(northEast, dest);
-        fNew = gNew + hNew;
+        Cell northEast = new Cell(cell.x + 1, cell.y - 1);
         
-        if (cellDetails[northEast.x][northEast.y].f > fNew) {
-          northEast.f = fNew;
-          openList.add(northEast);
-          
-          cellDetails[northEast.x][northEast.y].f = fNew;
-          cellDetails[northEast.x][northEast.y].g = gNew;
-          cellDetails[northEast.x][northEast.y].h = hNew;
+        if (isDestination(northEast, dest) == true) {
           cellDetails[northEast.x][northEast.y].parent_x = x;
           cellDetails[northEast.x][northEast.y].parent_y = y;
+          
+          return tracePath(cellDetails, dest);
+        }
+        else if (closedList[northEast.x][northEast.y] == false &&
+                 isBlocked(gameboard, northEast) == false) {
+          gNew = cellDetails[x][y].g + 1.414;
+          hNew = calculateH(northEast, dest);
+          fNew = gNew + hNew;
+          
+          if (cellDetails[northEast.x][northEast.y].f > fNew) {
+            northEast.f = fNew;
+            openList.add(northEast);
+            
+            cellDetails[northEast.x][northEast.y].f = fNew;
+            cellDetails[northEast.x][northEast.y].g = gNew;
+            cellDetails[northEast.x][northEast.y].h = hNew;
+            cellDetails[northEast.x][northEast.y].parent_x = x;
+            cellDetails[northEast.x][northEast.y].parent_y = y;
+          }
         }
       }
-    }
-    
-    // Check cell southeast of current cell
-    if (isValid(cell.x + 1, cell.y + 1) == true) {
       
-      Cell southEast = new Cell(cell.x + 1, cell.y + 1);
-      
-      if (isDestination(southEast, dest) == true) {
-        cellDetails[southEast.x][southEast.y].parent_x = x;
-        cellDetails[southEast.x][southEast.y].parent_y = y;
+      // Check cell southeast of current cell
+      if (isValid(cell.x + 1, cell.y + 1) == true) {
         
-        return tracePath(cellDetails, dest);
-      }
-      else if (closedList[southEast.x][southEast.y] == false &&
-               isBlocked(gameboard, southEast) == false) {
-        gNew = cellDetails[x][y].g + 1.414;
-        hNew = calculateH(southEast, dest);
-        fNew = gNew + hNew;
+        Cell southEast = new Cell(cell.x + 1, cell.y + 1);
         
-        if (cellDetails[southEast.x][southEast.y].f > fNew) {
-          southEast.f = fNew;
-          openList.add(southEast);
-          
-          cellDetails[southEast.x][southEast.y].f = fNew;
-          cellDetails[southEast.x][southEast.y].g = gNew;
-          cellDetails[southEast.x][southEast.y].h = hNew;
+        if (isDestination(southEast, dest) == true) {
           cellDetails[southEast.x][southEast.y].parent_x = x;
           cellDetails[southEast.x][southEast.y].parent_y = y;
+          
+          return tracePath(cellDetails, dest);
+        }
+        else if (closedList[southEast.x][southEast.y] == false &&
+                 isBlocked(gameboard, southEast) == false) {
+          gNew = cellDetails[x][y].g + 1.414;
+          hNew = calculateH(southEast, dest);
+          fNew = gNew + hNew;
+          
+          if (cellDetails[southEast.x][southEast.y].f > fNew) {
+            southEast.f = fNew;
+            openList.add(southEast);
+            
+            cellDetails[southEast.x][southEast.y].f = fNew;
+            cellDetails[southEast.x][southEast.y].g = gNew;
+            cellDetails[southEast.x][southEast.y].h = hNew;
+            cellDetails[southEast.x][southEast.y].parent_x = x;
+            cellDetails[southEast.x][southEast.y].parent_y = y;
+          }
         }
       }
-    }
-    
-    // Check cell southwest of current cell
-    if (isValid(cell.x - 1, cell.y + 1) == true) {
       
-      Cell southWest = new Cell(cell.x - 1, cell.y + 1);
-      
-      if (isDestination(southWest, dest) == true) {
-        cellDetails[southWest.x][southWest.y].parent_x = x;
-        cellDetails[southWest.x][southWest.y].parent_y = y;
+      // Check cell southwest of current cell
+      if (isValid(cell.x - 1, cell.y + 1) == true) {
         
-        return tracePath(cellDetails, dest);
-      }
-      else if (closedList[southWest.x][southWest.y] == false &&
-               isBlocked(gameboard, southWest) == false) {
-        gNew = cellDetails[x][y].g + 1.414;
-        hNew = calculateH(southWest, dest);
-        fNew = gNew + hNew;
+        Cell southWest = new Cell(cell.x - 1, cell.y + 1);
         
-        if (cellDetails[southWest.x][southWest.y].f > fNew) {
-          southWest.f = fNew;
-          openList.add(southWest);
-          
-          cellDetails[southWest.x][southWest.y].f = fNew;
-          cellDetails[southWest.x][southWest.y].g = gNew;
-          cellDetails[southWest.x][southWest.y].h = hNew;
+        if (isDestination(southWest, dest) == true) {
           cellDetails[southWest.x][southWest.y].parent_x = x;
           cellDetails[southWest.x][southWest.y].parent_y = y;
+          
+          return tracePath(cellDetails, dest);
+        }
+        else if (closedList[southWest.x][southWest.y] == false &&
+                 isBlocked(gameboard, southWest) == false) {
+          gNew = cellDetails[x][y].g + 1.414;
+          hNew = calculateH(southWest, dest);
+          fNew = gNew + hNew;
+          
+          if (cellDetails[southWest.x][southWest.y].f > fNew) {
+            southWest.f = fNew;
+            openList.add(southWest);
+            
+            cellDetails[southWest.x][southWest.y].f = fNew;
+            cellDetails[southWest.x][southWest.y].g = gNew;
+            cellDetails[southWest.x][southWest.y].h = hNew;
+            cellDetails[southWest.x][southWest.y].parent_x = x;
+            cellDetails[southWest.x][southWest.y].parent_y = y;
+          }
         }
       }
-    }
-    
-    // Check cell northwest of current cell
-    if (isValid(cell.x - 1, cell.y - 1) == true) {
-       
-      Cell northWest = new Cell(cell.x - 1, cell.y - 1);
       
-      if (isDestination(northWest, dest) == true) {
-        cellDetails[northWest.x][northWest.y].parent_x = x;
-        cellDetails[northWest.x][northWest.y].parent_y = y;
+      // Check cell northwest of current cell
+      if (isValid(cell.x - 1, cell.y - 1) == true) {
+         
+        Cell northWest = new Cell(cell.x - 1, cell.y - 1);
         
-        return tracePath(cellDetails, dest);
-      }
-      else if (closedList[northWest.x][northWest.y] == false &&
-               isBlocked(gameboard, northWest) == false) {
-        gNew = cellDetails[x][y].g + 1.414;
-        hNew = calculateH(northWest, dest);
-        fNew = gNew + hNew;
-        
-        if (cellDetails[northWest.x][northWest.y].f > fNew) {
-          northWest.f = fNew;
-          openList.add(northWest);
-          
-          cellDetails[northWest.x][northWest.y].f = fNew;
-          cellDetails[northWest.x][northWest.y].g = gNew;
-          cellDetails[northWest.x][northWest.y].h = hNew;
+        if (isDestination(northWest, dest) == true) {
           cellDetails[northWest.x][northWest.y].parent_x = x;
           cellDetails[northWest.x][northWest.y].parent_y = y;
+          
+          return tracePath(cellDetails, dest);
+        }
+        else if (closedList[northWest.x][northWest.y] == false &&
+                 isBlocked(gameboard, northWest) == false) {
+          gNew = cellDetails[x][y].g + 1.414;
+          hNew = calculateH(northWest, dest);
+          fNew = gNew + hNew;
+          
+          if (cellDetails[northWest.x][northWest.y].f > fNew) {
+            northWest.f = fNew;
+            openList.add(northWest);
+            
+            cellDetails[northWest.x][northWest.y].f = fNew;
+            cellDetails[northWest.x][northWest.y].g = gNew;
+            cellDetails[northWest.x][northWest.y].h = hNew;
+            cellDetails[northWest.x][northWest.y].parent_x = x;
+            cellDetails[northWest.x][northWest.y].parent_y = y;
+          }
         }
       }
     }
